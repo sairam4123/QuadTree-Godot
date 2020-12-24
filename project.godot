@@ -8,9 +8,44 @@
 
 config_version=4
 
-_global_script_classes=[  ]
+_global_script_classes=[ {
+"base": "Reference",
+"class": "InputEventMultiScreenDrag",
+"language": "GDScript",
+"path": "res://Assets/Addons/Godot-Touch-Input-Manager/CustomInputEvents/InputEventMultiScreenDrag.gd"
+}, {
+"base": "Reference",
+"class": "InputEventScreenPinch",
+"language": "GDScript",
+"path": "res://Assets/Addons/Godot-Touch-Input-Manager/CustomInputEvents/InputEventScreenPinch.gd"
+}, {
+"base": "Reference",
+"class": "InputEventScreenTwist",
+"language": "GDScript",
+"path": "res://Assets/Addons/Godot-Touch-Input-Manager/CustomInputEvents/InputEventScreenTwist.gd"
+}, {
+"base": "Reference",
+"class": "InputEventSingleScreenDrag",
+"language": "GDScript",
+"path": "res://Assets/Addons/Godot-Touch-Input-Manager/CustomInputEvents/InputEventSingleScreenDrag.gd"
+}, {
+"base": "Reference",
+"class": "InputEventSingleScreenTap",
+"language": "GDScript",
+"path": "res://Assets/Addons/Godot-Touch-Input-Manager/CustomInputEvents/InputEventSingleScreenTap.gd"
+}, {
+"base": "Reference",
+"class": "InputEventSingleScreenTouch",
+"language": "GDScript",
+"path": "res://Assets/Addons/Godot-Touch-Input-Manager/CustomInputEvents/InputEventSingleScreenTouch.gd"
+} ]
 _global_script_class_icons={
-
+"InputEventMultiScreenDrag": "",
+"InputEventScreenPinch": "",
+"InputEventScreenTwist": "",
+"InputEventSingleScreenDrag": "",
+"InputEventSingleScreenTap": "",
+"InputEventSingleScreenTouch": ""
 }
 
 [application]
@@ -21,6 +56,7 @@ config/icon="res://icon.png"
 
 [autoload]
 
+InputManager="*res://Assets/Addons/Godot-Touch-Input-Manager/InputManager.gd"
 MetaStaticFuncs="*res://Assets/Scripts/Meta_Static_Funcs.gd"
 QuadTree="*res://Assets/Scripts/QuadTree.gd"
 

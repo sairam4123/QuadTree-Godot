@@ -112,7 +112,7 @@ class _QuadTree:
 		
 			else:
 				for leaf in _children:
-					print(_children)
+#					print(_children)
 					if leaf._bounds.intersects(bound):
 						leaf.query(bound)
 						_found_objects += leaf._found_objects
@@ -143,9 +143,10 @@ class _QuadTree:
 				return _children[3]
 		
 	
-	func _get_rect_lines(points):
+	func _create_rect_lines(points):
 		for child in _children:
-			child._get_rect_lines(points)
+			if child:
+				child._create_rect_lines(points)
 
 		var p1 = Vector3(_bounds.position.x, _bounds.position.z, 1)
 		var p2 = Vector3(p1.x + _bounds.size.x, p1.y, 1)
@@ -166,29 +167,50 @@ class _QuadTree:
 	func draw(drawer: ImmediateGeometry, material: Material):
 		drawer.set_material_override(material)
 		drawer.begin(Mesh.PRIMITIVE_LINES)
+		_draw(drawer)
+		drawer.end()
 		
+	func _draw(drawer: ImmediateGeometry):
+		for child in _children:
+			if not _is_leaf:
+				print(child)
+				child._draw(drawer)
 		var points = []
-		_get_rect_lines(points)
+		_create_rect_lines(points)
+		
 		for point in points:
-			drawer.add_vertex(Vector3(point.x, 1, point.z)) # change it to x and y axis if needed.
+			drawer.add_vertex(Vector3(point.x, 1, point.y)) # change it to x and y axis if needed.
 		
-		var rect = _convert_aabb_to_rect()
-		drawer
+		for body in _objects:
+			var rect = _convert_aabb_to_rect(body.get_transformed_aabb())
+			
+			var Bpoint = Vector3(rect.end.x, 1, rect.position.y)
+			var Dpoint = Vector3(rect.position.x, 1,  rect.end.y)
+			var Apoint = Vector3(rect.position.x, 1, rect.position.y)
+			var Cpoint = Vector3(rect.end.x, 1, rect.end.y)
+			
+			drawer.add_vertex(Apoint)
+			drawer.add_vertex(Bpoint)
+			drawer.add_vertex(Bpoint)
+			drawer.add_vertex(Cpoint)
+			drawer.add_vertex(Cpoint)
+			drawer.add_vertex(Dpoint)
+			drawer.add_vertex(Dpoint)
+			drawer.add_vertex(Apoint)
 		
-		
-	func _convert_aabb_to_rect():
-		return Rect2(Vector2(_bounds.position.x, _bounds.position.z), Vector2(_bounds.size.x, _bounds.size.z))
+	func _convert_aabb_to_rect(transformed_aabb: AABB):
+		return Rect2(Vector2(transformed_aabb.position.x, transformed_aabb.position.z), Vector2(transformed_aabb.size.x, transformed_aabb.size.z))
 	
 
 # driver code
 func _ready() -> void:
 	var root_qt_node = self.create_quadtree(AABB(Vector3(-25, 0, -25), Vector3(50, 0, 50)), 5, 5)
-	for i in range(10):
+	for i in range(25):
 		var new_mesh = MeshInstance.new()
 		var cube_mesh = CubeMesh.new()
-		cube_mesh.size = Vector3(i, i, i)
+		cube_mesh.size = Vector3(rand_range(2, 4), 0, rand_range(2, 4))
 		new_mesh.mesh = cube_mesh
-		new_mesh.set_translation(Vector3(i+2, 0, i+2))
+		new_mesh.set_translation(Vector3(rand_range(-25, 25), 0, rand_range(-25, 25)))
 		add_child(new_mesh)
 		root_qt_node.add(new_mesh)
 #		print(root_qt_node._objects)
@@ -198,6 +220,13 @@ func _ready() -> void:
 	sphere_mesh.radius = 5
 	var new_mesh = MeshInstance.new()
 	new_mesh.set_translation(Vector3(4, 0, 4))
+	new_mesh.hide()
 	new_mesh.mesh = sphere_mesh
 	add_child(new_mesh)
 	root_qt_node.query(new_mesh.get_transformed_aabb())
+	var spatial_mat = SpatialMaterial.new()
+	spatial_mat.albedo_color = Color(0, 0, 0, 1)
+	root_qt_node.draw(get_node("/root/Spatial/ImmediateGeometry"), spatial_mat)
+	
+#	var rect = root_qt_node._convert_aabb_to_rect()
+#	prints("A:", rect.position, "B:", Bpoint, "C:", rect.end, "D:", Dpoint)
