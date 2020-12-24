@@ -38,7 +38,7 @@ class _QuadTree:
 		_objects.push_back(body)
 				
 		if _is_leaf and _level < _max_level and _objects.size() >= _capacity:
-			print("subdividing")
+#			print("subdividing")
 			_subdivide()
 			update(body)
 		return body
@@ -190,7 +190,7 @@ func _ready() -> void:
 		new_mesh.mesh = cube_mesh
 		new_mesh.set_translation(Vector3(i+2, 0, i+2))
 		add_child(new_mesh)
-		print(root_qt_node.add(new_mesh))
+		root_qt_node.add(new_mesh)
 #		print(root_qt_node._objects)
 #		print(root_qt_node._children)
 	
@@ -200,4 +200,4 @@ func _ready() -> void:
 	new_mesh.set_translation(Vector3(4, 0, 4))
 	new_mesh.mesh = sphere_mesh
 	add_child(new_mesh)
-	print(root_qt_node.query(new_mesh.get_transformed_aabb()))
+	root_qt_node.query(new_mesh.get_transformed_aabb())

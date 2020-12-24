@@ -16,13 +16,13 @@ _global_script_class_icons={
 [application]
 
 config/name="QuadTrees-Godot"
-run/main_scene="res://Spatial.tscn"
+run/main_scene="res://Assets/Scenes/Spatial.tscn"
 config/icon="res://icon.png"
 
 [autoload]
 
-QuadTree="*res://QuadTree.gd"
-MetaStaticFuncs="*res://Meta_Static_Funcs.gd"
+MetaStaticFuncs="*res://Assets/Scripts/Meta_Static_Funcs.gd"
+QuadTree="*res://Assets/Scripts/QuadTree.gd"
 
 [rendering]
 
