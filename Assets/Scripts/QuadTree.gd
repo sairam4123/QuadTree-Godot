@@ -50,7 +50,7 @@ class _QuadTree:
 			# subdivide if necessary
 			_subdivide()
 			# update the body's quadtree.
-			update(body)
+			return update(body)
 		return body
 	
 	func remove(body: VisualInstance) -> Object:
@@ -90,7 +90,7 @@ class _QuadTree:
 		
 		return add(body)
 	
-	func _subdivide():
+	func _subdivide() -> void:
 		"""
 		:PrivateMeth
 		
@@ -115,7 +115,7 @@ class _QuadTree:
 		_is_leaf = false # change is_leaf to false, because it has childs now.
 			
 	
-	func clear():
+	func clear() -> void:
 		"""
 		Clears the QuadTree.
 		"""
@@ -130,12 +130,28 @@ class _QuadTree:
 				child.clear()  # clear all it's children
 			_is_leaf = true
 	
-	func query(bound: AABB):
+	func query(bound: AABB) -> Array:
 		"""
 		Queries the QuadTree and returns the objects that exists within the bounds passed.
+		
+		Removes Duplicates as well.
 		"""
 		# clear the old objects
 		_found_objects.clear()
+		# query the QuadTree
+		var old_found_objects = _query(bound)
+		# remove duplicates
+		var new_found_objects = _remove_duplicates(old_found_objects)
+		
+		return new_found_objects
+		
+	
+	func _query(bound: AABB) -> Array:
+		"""
+		:PrivateMeth
+		
+		Queries the QuadTree and returns the objects that exists within the bounds passed.
+		"""
 		for object in _objects:
 			var transformed_aabb = object.get_transformed_aabb()
 			if transformed_aabb != bound and transformed_aabb.intersects(bound):  # check if the object in the bounds and it's not bound
@@ -145,35 +161,36 @@ class _QuadTree:
 			var child = _get_child(bound)
 			if child:
 				# query the child to find other objects
-				child.query(bound)
+				child._query(bound)
 				_found_objects += child._found_objects  # add them into the main list
+				
 		
 			else:
 				for leaf in _children:
 					# check if the leaf intersects with the bound
 					if leaf._bounds.intersects(bound):
-						leaf.query(bound)  # query the leaf for the objects
+						leaf._query(bound)  # query the leaf for the objects
 						_found_objects += leaf._found_objects  # add them into the main list
-		return _found_objects
 		
+		return _found_objects
 	
-	func _unsubdivide():
+	func _unsubdivide() -> void:
 		"""
 		:PrivateMeth
 		
 		Discards all the leafs and childs with no objects.
 		"""
-		if (!_objects.empty()): return null  # skip if objects is not empty
+		if (!_objects.empty()): return  # skip if objects is not empty
 		
 		if (!_is_leaf):
 			for child in _children:
-				if !child._is_leaf or !child._objects.empty(): return null  # skip if the child is not leaf or if there're objects in the child.
+				if !child._is_leaf or !child._objects.empty(): return  # skip if the child is not leaf or if there're objects in the child.
 		
 		clear()  # clear the level
 		if _parent:
 			_parent._unsubdivide()  # unsubdivide the parent if needed.
 	
-	func _get_child(body_bounds: AABB):
+	func _get_child(body_bounds: AABB) -> _QuadTree:
 		"""
 		:PrivateMeth
 		
@@ -192,7 +209,7 @@ class _QuadTree:
 		return null # cannot contain boundary -- too large
 		
 	
-	func _create_rect_lines(points):
+	func _create_rect_lines(points) -> void:
 		"""
 		:PrivateMeth
 		
@@ -222,16 +239,16 @@ class _QuadTree:
 		points.append(p4)
 		points.append(p1)
 	
-	func draw(drawer: ImmediateGeometry, material: Material):
+	func draw(drawer: ImmediateGeometry, material: Material, height: float = 1) -> void:
 		"""
 		Initializes drawing stuff for you, you can use `_draw` method if you want to have special initialization.
 		"""
 		drawer.set_material_override(material)
 		drawer.begin(Mesh.PRIMITIVE_LINES)
-		_draw(drawer)
+		_draw(drawer, height)
 		drawer.end()
 		
-	func _draw(drawer: ImmediateGeometry):
+	func _draw(drawer: ImmediateGeometry, height: float) -> void:
 		"""
 		:PrivateMeth
 		
@@ -241,15 +258,15 @@ class _QuadTree:
 		# recursively call _draw to draw objects in different subnodes.
 		for child in _children:
 			if not _is_leaf:
-				print(child)
-				child._draw(drawer)
+#				print(child)
+				child._draw(drawer, height)
 		var points = []
 		# initialize the points
 		_create_rect_lines(points)
 		
 		# draw them into the node.
 		for point in points:
-			drawer.add_vertex(Vector3(point.x, 1, point.y)) # change it to x and y axis if needed.
+			drawer.add_vertex(Vector3(point.x, height, point.y)) # change it to x and y axis if needed.
 		
 		# draw the bodies
 		for body in _objects:
@@ -257,10 +274,10 @@ class _QuadTree:
 			var rect = _convert_aabb_to_rect(body.get_transformed_aabb())
 			
 			# get all 4 points
-			var Bpoint = Vector3(rect.end.x, 1, rect.position.y)
-			var Dpoint = Vector3(rect.position.x, 1,  rect.end.y)
-			var Apoint = Vector3(rect.position.x, 1, rect.position.y)
-			var Cpoint = Vector3(rect.end.x, 1, rect.end.y)
+			var Bpoint = Vector3(rect.end.x, height, rect.position.y)
+			var Dpoint = Vector3(rect.position.x, height,  rect.end.y)
+			var Apoint = Vector3(rect.position.x, height, rect.position.y)
+			var Cpoint = Vector3(rect.end.x, height, rect.end.y)
 			
 			# add them here
 			drawer.add_vertex(Apoint)
@@ -272,55 +289,35 @@ class _QuadTree:
 			drawer.add_vertex(Dpoint)
 			drawer.add_vertex(Apoint)
 		
-	func _convert_aabb_to_rect(transformed_aabb: AABB):
+	static func _convert_aabb_to_rect(transformed_aabb: AABB) -> Rect2:
 		"""
-		:PrivateMeth
+		:StaticMeth
 		
 		Converts a AABB to Rect2
 		"""
 		return Rect2(Vector2(transformed_aabb.position.x, transformed_aabb.position.z), Vector2(transformed_aabb.size.x, transformed_aabb.size.z))  # assumed as XZ plane
 	
+	static func _remove_duplicates(a_list: Array) -> Array:
+		"""
+		:StaticMeth
+		
+		Removes all duplicates in an Array.
+		"""
+		if a_list.size() < 2:
+			return []
 
-# driver code
-func _ready() -> void:
-	# create quadtree
-	var root_qt_node = self.create_quadtree(AABB(Vector3(-25, 0, -25), Vector3(50, 0, 50)), 5, 5)
-	# create 25 objects to test out quad tree
-	for i in range(25):
-		# create new mesh instance
-		var new_mesh = MeshInstance.new()
-		# create a new cube mesh
-		var cube_mesh = CubeMesh.new()
-		# set it's size random from 2, 4 
-		cube_mesh.size = Vector3(rand_range(2, 4), 0, rand_range(2, 4))
-		new_mesh.mesh = cube_mesh
-		# set the position random from -25 to 25 -- size of the terrain
-		new_mesh.set_translation(Vector3(rand_range(-25, 25), 0, rand_range(-25, 25)))
-		add_child(new_mesh)
-		# add it into the quad tree
-		root_qt_node.add(new_mesh)
-	
-	# test query -- create a new sphere mesh and set it's radius to 5
-	var sphere_mesh = SphereMesh.new()
-	sphere_mesh.radius = 5
-	# create a new meshinstance and set it's translation to `Vector3(4, 0, 4)`
-	var new_mesh = MeshInstance.new()
-	new_mesh.set_translation(Vector3(4, 0, 4))
-	# hide it, because we don't want it to be shown.
-	new_mesh.hide()
-	# set the mesh and add it into the scene
-	new_mesh.mesh = sphere_mesh
-	add_child(new_mesh)
-	# query the QuadTree with the sphere mesh's Tranformed AABB
-	var returned_objects = root_qt_node.query(new_mesh.get_transformed_aabb())
-	
-	# print the returned objects
-	print(returned_objects)
+		var seen = {}
+		seen[a_list[0]] = true
+		var duplicate_indexes = []
 
+		for i in range(1, a_list.size()):
+			var v = a_list[i]
+			if seen.has(v):
+				# Duplicate!
+				duplicate_indexes.append(i)
+			else:
+				seen[v] = true
 
-	# visualize the quad tree
-	var spatial_mat = SpatialMaterial.new()
-	spatial_mat.albedo_color = Color(0, 0, 0, 1)
-	root_qt_node.draw(get_node("/root/Spatial/ImmediateGeometry"), spatial_mat)
-	
-	# remove and update are not tested please use it in your own risk.
+		var new_list = seen.keys()
+		
+		return new_list
