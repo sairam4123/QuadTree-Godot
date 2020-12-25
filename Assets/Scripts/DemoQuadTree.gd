@@ -3,9 +3,9 @@ extends Node
 func _ready() -> void:
 	randomize()
 	# create quadtree
-	var root_qt_node = QuadTree.create_quadtree(AABB(Vector3(-25, 0, -25), Vector3(50, 0, 50)), 5, 5)
-	# create 25 objects to test out quad tree
-	for i in range(25):
+	var root_qt_node = QuadTree.new(AABB(Vector3(-25, 0, -25), Vector3(50, 0, 50)), 3, 8)
+	# create 100 objects to test out quad tree
+	for i in range(100):
 		# create new mesh instance
 		var new_mesh = MeshInstance.new()
 		# create a new cube mesh
