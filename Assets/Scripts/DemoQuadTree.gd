@@ -61,11 +61,13 @@ func _physics_process(delta: float) -> void:
 			new_mesh.set_translation(ray['position'])
 			if Input.is_action_pressed("left_button"):
 				var transformed_aabb = new_mesh.get_transformed_aabb()
-				transformed_aabb.size.y += 10
-				transformed_aabb.position.y -= 2
+				transformed_aabb.size.y += 10000
+				transformed_aabb.position.y -= 5
 				print(transformed_aabb)
 				var returned_objects = root_qt_node.query(transformed_aabb)
 				for object in returned_objects:
-					print(object.has_meta("_qt"))
-					print(root_qt_node.remove_body(object))
+					print(object)
+#					print(object.has_meta("_qt"))
+					root_qt_node.remove_body(object)
+					object.hide()
 				root_qt_node.draw(0.2, true)
