@@ -43,6 +43,11 @@ _global_script_classes=[ {
 "class": "QuadTree",
 "language": "GDScript",
 "path": "res://addons/sairam.quadtree/QuadTree.gd"
+}, {
+"base": "Object",
+"class": "TypeFormattingLogic",
+"language": "GDScript",
+"path": "res://addons/metadata_inspector/TypeFormattingLogic.gd"
 } ]
 _global_script_class_icons={
 "InputEventMultiScreenDrag": "",
@@ -51,7 +56,8 @@ _global_script_class_icons={
 "InputEventSingleScreenDrag": "",
 "InputEventSingleScreenTap": "",
 "InputEventSingleScreenTouch": "",
-"QuadTree": ""
+"QuadTree": "",
+"TypeFormattingLogic": ""
 }
 
 [application]
@@ -67,7 +73,7 @@ MetaStaticFuncs="*res://addons/sairam.quadtree/Meta_Static_Funcs.gd"
 
 [editor_plugins]
 
-enabled=PoolStringArray( "sairam.quadtree" )
+enabled=PoolStringArray( "metadata_inspector", "sairam.quadtree" )
 
 [input]
 

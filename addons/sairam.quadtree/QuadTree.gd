@@ -55,21 +55,22 @@ func remove_body(body: VisualInstance) -> Object:
 	"""
 	Removes the pre-existing body from the QuadTree
 	"""
-	if !body.has_meta("_qt"): return null  # body not in tree
+#	if !body.has_meta("_qt"): return null  # body not in tree
 	
-#	print(body)
+	print(body.get_meta("_qt"))
 	
 	# get the QuadTreeNode
 	var qt_node = MetaStaticFuncs.get_meta_or_null(body, "_qt")
-	if qt_node != self: # check if is different from the current level
+	if qt_node != self and qt_node: # check if is different from the current level
 #		print(body)
 		return qt_node.remove_body(body)  # call the qt_node's remove method
 	
+	# remove the `_qt` node because it's no longer in quad tree
+	MetaStaticFuncs.remove_meta_with_check(body, "_qt")	
 	# if the object is same, then remove it directly
 	_objects.erase(body)
 #	print(body)
-	# remove the `_qt` node because it's no longer in quad tree
-	MetaStaticFuncs.remove_meta_with_check(body, "_qt")
+
 	
 	return body
 		
@@ -325,5 +326,6 @@ static func _remove_duplicates(a_list: Array) -> Array:
 			seen[v] = true
 
 	var new_list = seen.keys()
-	
+	for object in new_list:
+		print(object)
 	return new_list
