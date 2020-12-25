@@ -11,3 +11,5 @@ Special Thanks to:
 3. Calinou, for helping to fix some bugs.
 4. recylops, for providing me the resources to read.
 5. Pikol93, for guiding me and providing support and answering my questions.
+6. Zylann, for helping me to find the equivalent GDScript from C++.
+And big thanks to jaynabonne, for helping me to fix the regression that happend.
