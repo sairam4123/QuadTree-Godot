@@ -52,7 +52,6 @@ func _ready() -> void:
 	
 
 func _physics_process(delta: float) -> void:
-	if Input.is_action_pressed("left_button"):
 		var mouse_pointer = get_viewport().get_mouse_position()
 		var camera = get_viewport().get_camera()
 		var from = camera.project_ray_origin(mouse_pointer)
@@ -60,12 +59,13 @@ func _physics_process(delta: float) -> void:
 		var ray = get_world().direct_space_state.intersect_ray(from, to, [self, camera])
 		if !ray.empty():
 			new_mesh.set_translation(ray['position'])
-			var transformed_aabb = new_mesh.get_transformed_aabb()
-			transformed_aabb.size.y += 10
-			transformed_aabb.position.y -= 2
-			print(transformed_aabb)
-			var returned_objects = root_qt_node.query(transformed_aabb)
-			for object in returned_objects:
-				print(object.has_meta("_qt"))
-				print(root_qt_node.remove_body(object))
-			root_qt_node.draw(0.2, true)
+			if Input.is_action_pressed("left_button"):
+				var transformed_aabb = new_mesh.get_transformed_aabb()
+				transformed_aabb.size.y += 10
+				transformed_aabb.position.y -= 2
+				print(transformed_aabb)
+				var returned_objects = root_qt_node.query(transformed_aabb)
+				for object in returned_objects:
+					print(object.has_meta("_qt"))
+					print(root_qt_node.remove_body(object))
+				root_qt_node.draw(0.2, true)
