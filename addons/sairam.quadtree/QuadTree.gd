@@ -6,23 +6,29 @@ var _bounds: AABB
 var _capacity: int
 var _max_level: int
 var _level: int
-var _parent = null
+var _parent: QuadTree = null
 var _children = []
 var _objects = []
 var _found_objects = []
 var _is_leaf: bool = true
 var _center: Vector3
+var _material: Material
+var _immediate_geo_node: ImmediateGeometry
 
-func _init(bounds, capacity, max_level, level = 0, parent = null) -> void:
+func _init(bounds, capacity, max_level, level = 0, parent = null, material = null, immediate_geo_node = null) -> void:
 	self._bounds = bounds
 	self._capacity = capacity
 	self._max_level = max_level 
 	self._level = level
 	self._parent = parent
 	self._center = self._bounds.size / 2
+	self._material = material
+	self._immediate_geo_node = immediate_geo_node
+	if immediate_geo_node:
+		self._immediate_geo_node.set_material_override(material)
 	self._children.resize(4)
-
-func add(body: VisualInstance) -> Object:
+	
+func add_body(body: VisualInstance) -> Object:
 	"""
 	Adds a new body into the QuadTree.
 	"""
@@ -32,7 +38,7 @@ func add(body: VisualInstance) -> Object:
 		# add to child if not current obj is leaf.
 		var child = _get_child(body.get_transformed_aabb())
 		if child:
-			child.add(body)
+			child.add_body(body)
 	
 	body.set_meta("_qt", self)
 	# add the object into the tree
@@ -42,45 +48,49 @@ func add(body: VisualInstance) -> Object:
 		# subdivide if necessary
 		_subdivide()
 		# update the body's quadtree.
-		return update(body)
+		return update_body(body)
 	return body
 
-func remove(body: VisualInstance) -> Object:
+func remove_body(body: VisualInstance) -> Object:
 	"""
 	Removes the pre-existing body from the QuadTree
 	"""
 	if !body.has_meta("_qt"): return null  # body not in tree
 	
+#	print(body)
+	
 	# get the QuadTreeNode
 	var qt_node = MetaStaticFuncs.get_meta_or_null(body, "_qt")
 	if qt_node != self: # check if is different from the current level
-		return qt_node.remove(body)  # call the qt_node's remove method
+#		print(body)
+		return qt_node.remove_body(body)  # call the qt_node's remove method
 	
 	# if the object is same, then remove it directly
 	_objects.erase(body)
+#	print(body)
 	# remove the `_qt` node because it's no longer in quad tree
 	MetaStaticFuncs.remove_meta_with_check(body, "_qt")
 	
 	return body
 		
 
-func update(body: VisualInstance) -> Object:
+func update_body(body: VisualInstance) -> Object:
 	"""
 	Updates the body. A method for moving objects.
 	"""
-	if !remove(body): return null  # something went wrong while removing the object
+	if !remove_body(body): return null  # something went wrong while removing the object
 	
 	if _parent != null and !_bounds.encloses(body.get_transformed_aabb()): # QuadTreeNode is not root, add it here.
-		return _parent.add(body)
+		return _parent.add_body(body)
 	
 	if !_is_leaf:  # QuadTreeNode is not leaf
 		# get the child
 		var child = _get_child(body.get_transformed_aabb())
 		if child:
 			# add it
-			return child.add(body)
+			return child.add_body(body)
 	
-	return add(body)
+	return add_body(body)
 
 func _subdivide() -> void:
 	"""
@@ -182,7 +192,7 @@ func _unsubdivide() -> void:
 	if _parent:
 		_parent._unsubdivide()  # unsubdivide the parent if needed.
 
-func _get_child(body_bounds: AABB):
+func _get_child(body_bounds: AABB) -> QuadTree:
 	"""
 	:PrivateMeth
 	
@@ -231,11 +241,15 @@ func _create_rect_lines(points) -> void:
 	points.append(p4)
 	points.append(p1)
 
-func draw(drawer: ImmediateGeometry, material: Material, height: float = 1) -> void:
+func draw(height: float = 1, clear_drawing: bool = true, drawer: ImmediateGeometry = null, material: Material = null) -> void:
 	"""
 	Initializes drawing stuff for you, you can use `_draw` method if you want to have special initialization.
 	"""
-	drawer.set_material_override(material)
+	drawer = drawer if drawer else self._immediate_geo_node
+	if clear_drawing:
+		drawer.clear()
+	if material:
+		drawer.set_material_override(material)
 	drawer.begin(Mesh.PRIMITIVE_LINES)
 	_draw(drawer, height)
 	drawer.end()
