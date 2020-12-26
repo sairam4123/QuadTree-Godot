@@ -37,21 +37,21 @@ quad_Tree.remove_body(mesh)
 ```
 ## Querying objects from QuadTree
 ```gdscript
-  var sphere_mesh = SphereMesh.new()
-	sphere_mesh.radius = rand_range(5, 8)
-	sphere_mesh.height = 0.1
-	# create a new meshinstance and set it's translation to `Vector3(4, 0, 4)`
-	new_mesh = MeshInstance.new()
-	new_mesh.set_translation(Vector3(rand_range(2, 6), 0, rand_range(2, 6)))
-	# set the mesh and add it into the scene
-	new_mesh.mesh = sphere_mesh
-	add_child(new_mesh)
+var sphere_mesh = SphereMesh.new()
+sphere_mesh.radius = rand_range(5, 8)
+sphere_mesh.height = 0.1
+# create a new meshinstance and set it's translation to `Vector3(4, 0, 4)`
+new_mesh = MeshInstance.new()
+new_mesh.set_translation(Vector3(rand_range(2, 6), 0, rand_range(2, 6)))
+# set the mesh and add it into the scene
+new_mesh.mesh = sphere_mesh
+add_child(new_mesh)
   
-  # after the init work we'll now do a query and fetch objects
-  var returned_objects = quad_tree.query(new_mesh.get_transformed_aabb()) # Use Transformed AABB so the code doesn't breaks.
+# after the init work we'll now do a query and fetch objects
+var returned_objects = quad_tree.query(new_mesh.get_transformed_aabb()) # Use Transformed AABB so the code doesn't breaks.
   
-  # let's print it
-  print(returned_objects)
+# let's print it
+print(returned_objects)
 ```
 ## Updating objects in QuadTree, moving objects
 ```gdscript
