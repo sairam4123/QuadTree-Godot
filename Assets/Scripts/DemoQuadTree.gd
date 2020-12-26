@@ -5,7 +5,8 @@ var root_qt_node: QuadTree
 
 
 func _ready() -> void:
-	randomize()
+	# randomize()
+	seed(314159)
 	# create quadtree
 	var spatial_mat = SpatialMaterial.new()
 	spatial_mat.albedo_color = Color(0, 0, 0, 1)
@@ -51,7 +52,7 @@ func _ready() -> void:
 	root_qt_node.draw(0.2)
 	
 
-func _physics_process(delta: float) -> void:
+func _process(delta: float) -> void:
 		var mouse_pointer = get_viewport().get_mouse_position()
 		var camera = get_viewport().get_camera()
 		var from = camera.project_ray_origin(mouse_pointer)
@@ -62,13 +63,17 @@ func _physics_process(delta: float) -> void:
 			if Input.is_action_pressed("left_button"):
 				var transformed_aabb = new_mesh.get_transformed_aabb()
 				transformed_aabb.size.y += 10000
-				transformed_aabb.position.y -= 5
-#				print(transformed_aabb)
+				transformed_aabb.position.y -= 50
+				# print(transformed_aabb)
 				var returned_objects = root_qt_node.query(transformed_aabb)
 #				print(returned_objects)
 				for object in returned_objects:
-#					print(object)
 #					print(object.has_meta("_qt"))
 					root_qt_node.remove_body(object)
 					object.call_deferred("queue_free")
 				root_qt_node.draw(0.2, true)
+
+func _input(event):
+	if event.is_action_pressed("ui_select"):		# space bar
+		print("Dump:")
+		root_qt_node.dump()

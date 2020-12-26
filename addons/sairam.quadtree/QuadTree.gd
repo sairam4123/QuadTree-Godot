@@ -160,16 +160,15 @@ func _query(bound: AABB) -> Array:
 			# add the object into _found_objects
 			_found_objects.push_back(object)
 	if !_is_leaf:
-		# var child = _get_child(bound)
-		# if child:
-		#     # query the child to find other objects
-		#     _found_objects += child._query(bound)
+		var child = _get_child(bound)
+		if child:
+			# query the child to find other objects
+			_found_objects += child._query(bound)
 			
-	
 		# else:
 			for leaf in _children:
 				# check if the leaf intersects with the bound
-				# if leaf._bounds.intersects(bound):
+				if leaf._bounds.intersects(bound):
 					_found_objects += leaf._query(bound)  # query the leaf for the objects
 	
 	return _found_objects
@@ -196,16 +195,19 @@ func _get_child(body_bounds: AABB) -> QuadTree:
 	
 	Gets the child that incorporates itself in the body_bounds passed.
 	"""
-	if body_bounds.end.z < _bounds.end.z / 2:
-		if body_bounds.end.x < _bounds.end.x / 2:
+	if body_bounds.end.z < _bounds.end.z:
+		if body_bounds.end.x < _bounds.end.x:
 			return _children[1]  # top left
-		elif body_bounds.position.x > _bounds.end.x / 2:
+		else:
+		# elif body_bounds.position.x > _bounds.end.x:
 			return _children[0]  # top right
-	elif body_bounds.position.z > _bounds.end.z / 2:
-		if body_bounds.end.x < _bounds.end.x / 2:
+	else:
+		if body_bounds.end.x < _bounds.end.x:
 			return _children[2]  # bottom left
-		elif body_bounds.position.x > _bounds.end.x / 2:
+		else:
+		# elif body_bounds.position.x > _bounds.end.x:
 			return _children[3]  # bottom right
+	assert(false)
 	return null # cannot contain boundary -- too large
 	
 
@@ -238,6 +240,13 @@ func _create_rect_lines(points) -> void:
 
 	points.append(p4)
 	points.append(p1)
+
+func dump(indent = ""):
+	print("%sobjects: %s" % [indent, _objects])
+	for child in _children:
+		print("%schild: %s" % [indent, child])
+		if child != null:
+			child.dump(indent + "  ")
 
 func draw(height: float = 1, clear_drawing: bool = true, drawer: ImmediateGeometry = null, material: Material = null) -> void:
 	"""
@@ -306,20 +315,10 @@ static func _remove_duplicates(a_list: Array) -> Array:
 	
 	Removes all duplicates in an Array.
 	"""
-	if a_list.size() < 2:
-		return a_list
-
 	var seen = {}
-	seen[a_list[0]] = true
-	var duplicate_indexes = []
 
-	for i in range(1, a_list.size()):
+	for i in range(a_list.size()):
 		var v = a_list[i]
-		if seen.has(v):
-			# Duplicate!
-			duplicate_indexes.append(i)
-		else:
-			seen[v] = true
+		seen[v] = true
 
-	var new_list = seen.keys()
-	return new_list
+	return seen.keys()
