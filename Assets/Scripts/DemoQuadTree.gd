@@ -10,10 +10,10 @@ func _ready() -> void:
 	# create quadtree
 	var spatial_mat = SpatialMaterial.new()
 	spatial_mat.albedo_color = Color(0, 0, 0, 1)
-	root_qt_node = QuadTree.new(AABB(Vector3(-50, 0, -50), Vector3(100, 0, 100)), 20, 3, 0, null, spatial_mat, get_node("/root/Spatial/ImmediateGeometry"))
+	root_qt_node = QuadTree.new(AABB(Vector3(-100, 0, -100), Vector3(200, 0, 200)), 3, 8, 0, null, spatial_mat, get_node("/root/Spatial/ImmediateGeometry"))
 	# create 100 objects to test out quad tree
 	var spatial_mat_2 = SpatialMaterial.new()
-	for i in range(100):
+	for i in range(25):
 		# create new mesh instance
 		var new_mesh = MeshInstance.new()
 		# create a new cube mesh
@@ -24,7 +24,7 @@ func _ready() -> void:
 		spatial_mat_2.albedo_color = Color(rand_range(0, 1), rand_range(0, 1), rand_range(0, 1), 1)
 		new_mesh.material_override = spatial_mat_2.duplicate()
 		# set the position random from -25 to 25 -- size of the terrain
-		new_mesh.set_translation(Vector3(rand_range(-50, 50), 0.1, rand_range(-50, 50)))
+		new_mesh.set_translation(Vector3(rand_range(-100, 100), 0.1, rand_range(-100, 100)))
 		add_child(new_mesh)
 		# add it into the quad tree
 		root_qt_node.add_body(new_mesh)
@@ -66,11 +66,11 @@ func _process(delta: float) -> void:
 				transformed_aabb.position.y -= 50
 				# print(transformed_aabb)
 				var returned_objects = root_qt_node.query(transformed_aabb)
+#				print(returned_objects)
 				for object in returned_objects:
-					# print(object)
 #					print(object.has_meta("_qt"))
 					root_qt_node.remove_body(object)
-					object.hide()
+					object.call_deferred("queue_free")
 				root_qt_node.draw(0.2, true)
 
 func _input(event):
