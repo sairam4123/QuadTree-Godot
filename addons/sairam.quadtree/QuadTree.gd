@@ -26,7 +26,12 @@ func _init(bounds, capacity, max_level, level = 0, parent = null, material = nul
 	self._immediate_geo_node = immediate_geo_node
 	if immediate_geo_node:
 		self._immediate_geo_node.set_material_override(material)
+	_set_as_empty_leaf()
+
+func _set_as_empty_leaf():
+	self._children = []
 	self._children.resize(4)
+	_is_leaf = true
 	
 func add_body(body: VisualInstance) -> Object:
 	"""
@@ -48,35 +53,41 @@ func add_body(body: VisualInstance) -> Object:
 		# subdivide if necessary
 		_subdivide()
 		# update the body's quadtree.
-		return update_body(body)
+		return update_body(body, false)
 	return body
 
-func remove_body(body: VisualInstance) -> Object:
+func remove_body(body: VisualInstance, do_unsubdivide = true) -> Object:
 	"""
 	Removes the pre-existing body from the QuadTree
 	"""
-	if !body.has_meta("_qt"): return null  # body not in tree
+	# print("remove body %s" % body)
+
+	if !body.has_meta("_qt"): 
+		print("no meta")
+		return null  # body not in tree
 	
 	
 	# get the QuadTreeNode
 	var qt_node = MetaStaticFuncs.get_meta_or_null(body, "_qt")
 	if qt_node != self and qt_node: # check if is different from the current level
-		return qt_node.remove_body(body)  # call the qt_node's remove method
+		# print("remove body from child")
+		return qt_node.remove_body(body, do_unsubdivide)  # call the qt_node's remove method
 	
-	_unsubdivide()
 	# remove the `_qt` node because it's no longer in quad tree
 	MetaStaticFuncs.remove_meta_with_check(body, "_qt")	
 	# if the object is same, then remove it directly
 	_objects.erase(body)
+	if do_unsubdivide:
+		_unsubdivide()
 
 	return body
 		
 
-func update_body(body: VisualInstance) -> Object:
+func update_body(body: VisualInstance, do_unsubdivide = true) -> Object:
 	"""
 	Updates the body. A method for moving objects.
 	"""
-	if !remove_body(body): return null  # something went wrong while removing the object
+	if !remove_body(body, do_unsubdivide): return null  # something went wrong while removing the object
 	
 	if _parent != null and !_bounds.encloses(body.get_transformed_aabb()): # QuadTreeNode is not root, add it here.
 		return _parent.add_body(body)
@@ -129,7 +140,7 @@ func clear() -> void:
 	if !_is_leaf:  # if the self is not leaf
 		for child in _children:
 			child.clear()  # clear all it's children
-		_is_leaf = true
+		_set_as_empty_leaf()
 
 func query(bound: AABB) -> Array:
 	"""
@@ -173,18 +184,28 @@ func _query(bound: AABB) -> Array:
 	
 	return _found_objects
 
+func _can_empty_children():
+	for child in _children:
+		if child == null or not child._is_leaf or not child._objects.empty():
+			return false
+	return true
+
 func _unsubdivide() -> void:
 	"""
 	:PrivateMeth
 	
 	Discards all the leafs and childs with no objects.
 	"""
-	if (!_objects.empty()): print("has objects", _objects); return  # skip if objects is not empty
+	if _can_empty_children():
+		_set_as_empty_leaf()
+
+	if (!_objects.empty()):
+		 print("has objects", _objects)
+		 return  # skip if objects is not empty
 	
 	if (!_is_leaf):
 		for child in _children:
 			if !child._is_leaf or !child._objects.empty(): print("right"); return  # skip if the child is not leaf or if there're objects in the child.
-	
 	clear()  # clear the level
 	if _parent:
 		_parent._unsubdivide()  # unsubdivide the parent if needed.
@@ -195,14 +216,13 @@ func _get_child(body_bounds: AABB) -> QuadTree:
 	
 	Gets the child that incorporates itself in the body_bounds passed.
 	"""
-	if body_bounds.end.z < _bounds.end.z:
-		if body_bounds.end.x < _bounds.end.x:
+	if body_bounds.end.z < _bounds.position.z + _center.z:
+		if body_bounds.end.x < _bounds.position.x + _center.x:
 			return _children[1]  # top left
 		else:
-		# elif body_bounds.position.x > _bounds.end.x:
 			return _children[0]  # top right
 	else:
-		if body_bounds.end.x < _bounds.end.x:
+		if body_bounds.end.x < _bounds.position.x + _center.x:
 			return _children[2]  # bottom left
 		else:
 		# elif body_bounds.position.x > _bounds.end.x:
@@ -242,7 +262,7 @@ func _create_rect_lines(points) -> void:
 	points.append(p1)
 
 func dump(indent = ""):
-	print("%sobjects: %s" % [indent, _objects])
+	print("%sobjects: %s, isLeaf: %s, parent: %s" % [indent, _objects, _is_leaf, _parent])
 	for child in _children:
 		print("%schild: %s" % [indent, child])
 		if child != null:
