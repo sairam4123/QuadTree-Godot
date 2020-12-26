@@ -63,12 +63,12 @@ func remove_body(body: VisualInstance) -> Object:
 	if qt_node != self and qt_node: # check if is different from the current level
 		return qt_node.remove_body(body)  # call the qt_node's remove method
 	
+	_unsubdivide()
 	# remove the `_qt` node because it's no longer in quad tree
 	MetaStaticFuncs.remove_meta_with_check(body, "_qt")	
 	# if the object is same, then remove it directly
 	_objects.erase(body)
 
-	
 	return body
 		
 
@@ -119,6 +119,7 @@ func clear() -> void:
 	"""
 	Clears the QuadTree.
 	"""
+	print("clear called")
 	# recursively remove all the objects
 	if !_objects.empty():
 		for object in _objects:
@@ -155,23 +156,21 @@ func _query(bound: AABB) -> Array:
 	_found_objects.clear()
 	for object in _objects:
 		var transformed_aabb = object.get_transformed_aabb()
-		if transformed_aabb != bound and bound.intersects(transformed_aabb):  # check if the object in the bounds and it's not bound
+		if bound.intersects(transformed_aabb):  # check if the object in the bounds and it's not bound
 			# add the object into _found_objects
 			_found_objects.push_back(object)
 	if !_is_leaf:
-		var child = _get_child(bound)
-		if child:
-			# query the child to find other objects
-			child._query(bound)
-			_found_objects += child._found_objects  # add them into the main list
+		# var child = _get_child(bound)
+		# if child:
+		#     # query the child to find other objects
+		#     _found_objects += child._query(bound)
 			
 	
-		else:
+		# else:
 			for leaf in _children:
 				# check if the leaf intersects with the bound
-				if leaf._bounds.intersects(bound):
-					leaf._query(bound)  # query the leaf for the objects
-					_found_objects += leaf._found_objects  # add them into the main list
+				# if leaf._bounds.intersects(bound):
+					_found_objects += leaf._query(bound)  # query the leaf for the objects
 	
 	return _found_objects
 
@@ -181,11 +180,11 @@ func _unsubdivide() -> void:
 	
 	Discards all the leafs and childs with no objects.
 	"""
-	if (!_objects.empty()): return  # skip if objects is not empty
+	if (!_objects.empty()): print("has objects", _objects); return  # skip if objects is not empty
 	
 	if (!_is_leaf):
 		for child in _children:
-			if !child._is_leaf or !child._objects.empty(): return  # skip if the child is not leaf or if there're objects in the child.
+			if !child._is_leaf or !child._objects.empty(): print("right"); return  # skip if the child is not leaf or if there're objects in the child.
 	
 	clear()  # clear the level
 	if _parent:
@@ -308,7 +307,7 @@ static func _remove_duplicates(a_list: Array) -> Array:
 	Removes all duplicates in an Array.
 	"""
 	if a_list.size() < 2:
-		return []
+		return a_list
 
 	var seen = {}
 	seen[a_list[0]] = true
