@@ -255,7 +255,7 @@ func dump(file_name = null, indent = ""):
 		print("worked")
 		_dump(new_file , indent)
 	else:
-		dump(file_name, indent)
+		_dump()
 
 
 func _dump(file_obj: File = null, indent = ""):
@@ -266,7 +266,7 @@ func _dump(file_obj: File = null, indent = ""):
 			if child != null:
 				child._dump(file_obj, indent + "  ")
 	else:
-		print("%sobjects: %s" % [indent, _objects])
+		print("%sobjects: %s, isLeaf: %s, parent: %s" % [indent, _objects, _is_leaf, _parent])
 		for child in _children:
 			print("%schild: %s" % [indent, child])
 			if child != null:
