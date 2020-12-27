@@ -2,11 +2,16 @@ extends MeshInstance
 
 var new_mesh: MeshInstance
 var root_qt_node: QuadTree
-
+var random_seed_to_use = null
 
 func _ready() -> void:
-	# randomize()
-	seed(314159)
+
+	if random_seed_to_use == null:
+		randomize()
+		random_seed_to_use = int(rand_range(-100000, 100000))
+	print("Using seed: %s" % random_seed_to_use)
+	seed(random_seed_to_use)
+
 	# create quadtree
 	var spatial_mat = SpatialMaterial.new()
 	spatial_mat.albedo_color = Color(0, 0, 0, 1)
