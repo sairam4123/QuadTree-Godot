@@ -63,12 +63,12 @@ func remove_body(body: VisualInstance) -> Object:
 	if qt_node != self and qt_node: # check if is different from the current level
 		return qt_node.remove_body(body)  # call the qt_node's remove method
 	
-	_unsubdivide()
 	# remove the `_qt` node because it's no longer in quad tree
 	MetaStaticFuncs.remove_meta_with_check(body, "_qt")	
 	# if the object is same, then remove it directly
 	_objects.erase(body)
 
+	_unsubdivide()
 	return body
 		
 
@@ -241,12 +241,29 @@ func _create_rect_lines(points) -> void:
 	points.append(p4)
 	points.append(p1)
 
-func dump(indent = ""):
-	print("%sobjects: %s" % [indent, _objects])
-	for child in _children:
-		print("%schild: %s" % [indent, child])
-		if child != null:
-			child.dump(indent + "  ")
+func dump(file_name = null, indent = ""):
+	if file_name:
+		var new_file = File.new()
+		print(new_file.open("user://dumps/%s.txt" % file_name, File.WRITE))
+		print("worked")
+		_dump(new_file , indent)
+	else:
+		dump(file_name, indent)
+
+
+func _dump(file_obj: File = null, indent = ""):
+	if file_obj:
+		file_obj.store_line("%sobjects: %s" % [indent, _objects])
+		for child in _children:
+			file_obj.store_line("%schild: %s" % [indent, child])
+			if child != null:
+				child._dump(file_obj, indent + "  ")
+	else:
+		print("%sobjects: %s" % [indent, _objects])
+		for child in _children:
+			print("%schild: %s" % [indent, child])
+			if child != null:
+				child._dump(file_obj, indent + "  ")
 
 func draw(height: float = 1, clear_drawing: bool = true, drawer: ImmediateGeometry = null, material: Material = null) -> void:
 	"""
