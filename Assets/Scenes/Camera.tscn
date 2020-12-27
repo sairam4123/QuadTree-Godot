@@ -2,7 +2,6 @@
 
 [ext_resource path="res://Assets/Scripts/Camera.gd" type="Script" id=1]
 
-
 [node name="HorizontalRotation" type="Spatial"]
 script = ExtResource( 1 )
 
