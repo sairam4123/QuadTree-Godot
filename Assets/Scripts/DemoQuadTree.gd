@@ -76,4 +76,4 @@ func _process(delta: float) -> void:
 func _input(event):
 	if event.is_action_pressed("ui_select"):		# space bar
 		print("Dump:")
-		root_qt_node.dump()
+		root_qt_node.dump("dump")
