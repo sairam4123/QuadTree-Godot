@@ -28,6 +28,11 @@ func _init(bounds, capacity, max_level, level = 0, parent = null, material = nul
 	_set_as_empty_leaf()
 
 func _set_as_empty_leaf():
+	"""
+	:PrivateMeth
+	
+	Set this node to be a leaf node, with no children.
+	"""
 	self._children = []
 	self._children.resize(4)
 	_is_leaf = true
@@ -140,8 +145,6 @@ func clear() -> void:
 func query(bound: AABB) -> Array:
 	"""
 	Queries the QuadTree and returns the objects that exists within the bounds passed.
-	
-	Removes Duplicates as well.
 	"""
 	# query the QuadTree
 	return _query(bound)
@@ -159,23 +162,23 @@ func _query(bound: AABB) -> Array:
 		if bound.intersects(transformed_aabb):  # check if the object in the bounds and it's not bound
 			# add the object into found_objects
 			found_objects.push_back(object)
+
 	if !_is_leaf:
-		var child = _get_child(bound)
-		if child:
-			# query the child to find other objects
-			found_objects += child._query(bound)
-			
-		# else:
-			for leaf in _children:
-				# check if the leaf intersects with the bound
-				if leaf._bounds.intersects(bound):
-					found_objects += leaf._query(bound)  # query the leaf for the objects
+		for leaf in _children:
+			# check if the leaf intersects with the bound
+			if leaf._bounds.intersects(bound):
+				found_objects += leaf._query(bound)  # query the leaf for the objects
 	
 	return found_objects
 
 func _can_empty_children():
+	"""
+	:PrivateMeth
+	
+	Return whether this node can have its children removed.
+	"""
 	for child in _children:
-		if child == null or not child._is_leaf or not child._objects.empty():
+		if child == null or !child._is_leaf or !child._objects.empty():
 			return false
 	return true
 
@@ -185,16 +188,18 @@ func _unsubdivide() -> void:
 	
 	Discards all the leafs and childs with no objects.
 	"""
-	if _can_empty_children():
+	if !_is_leaf and _can_empty_children():
 		_set_as_empty_leaf()
 
 	if (!_objects.empty()):
-		 print("has objects", _objects)
+		#  print("has objects", _objects)
 		 return  # skip if objects is not empty
 	
 	if (!_is_leaf):
 		for child in _children:
-			if !child._is_leaf or !child._objects.empty(): print("right"); return  # skip if the child is not leaf or if there're objects in the child.
+			if !child._is_leaf or !child._objects.empty():
+				# print("right");
+				return  # skip if the child is not leaf or if there're objects in the child.
 	clear()  # clear the level
 	if _parent:
 		_parent._unsubdivide()  # unsubdivide the parent if needed.
@@ -205,8 +210,11 @@ func _get_child(body_bounds: AABB) -> QuadTree:
 	
 	Gets the child that incorporates itself in the body_bounds passed.
 	"""
-	var left = body_bounds.end.x < _bounds.position.x + _center.x
-	if body_bounds.end.z < _bounds.position.z + _center.z:
+	# Use the center of the bounds to determine ownership.
+	var center_x = body_bounds.position.x + body_bounds.size.x/2 
+	var center_z = body_bounds.position.z + body_bounds.size.z/2 
+	var left = center_x < _bounds.position.x + _center.x
+	if center_z < _bounds.position.z + _center.z:
 		if left:
 			return _children[1]  # top left
 		else:
@@ -252,7 +260,7 @@ func dump(file_name = null, indent = ""):
 	if file_name:
 		var dir = Directory.new()
 		dir.make_dir_recursive("user://dumps")
-		
+
 		var new_file = File.new()
 		print(new_file.open("user://dumps/%s.txt" % file_name, File.WRITE))
 		print("worked")
@@ -337,4 +345,9 @@ static func _convert_aabb_to_rect(transformed_aabb: AABB) -> Rect2:
 	return Rect2(Vector2(transformed_aabb.position.x, transformed_aabb.position.z), Vector2(transformed_aabb.size.x, transformed_aabb.size.z))  # assumed as XZ plane
 
 static func _remove_qt_metadata(body):
+	"""
+	:StaticMeth
+
+	Remove the qt metadata from the passed body.
+	"""
 	MetaStaticFuncs.remove_meta_with_check(body, "_qt")
