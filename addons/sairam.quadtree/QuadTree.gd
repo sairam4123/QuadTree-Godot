@@ -53,7 +53,7 @@ func add_body(body: VisualInstance) -> Object:
 		# subdivide if necessary
 		_subdivide()
 		# update the body's quadtree.
-		return update_body(body, false)
+#		return update_body(body, false)
 	return body
 
 func remove_body(body: VisualInstance, do_unsubdivide = true) -> Object:
