@@ -250,6 +250,9 @@ func _create_rect_lines(points) -> void:
 
 func dump(file_name = null, indent = ""):
 	if file_name:
+		var dir = Directory.new()
+		dir.make_dir_recursive("user://dumps")
+		
 		var new_file = File.new()
 		print(new_file.open("user://dumps/%s.txt" % file_name, File.WRITE))
 		print("worked")
