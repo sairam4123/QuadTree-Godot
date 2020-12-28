@@ -283,7 +283,7 @@ func _dump(file_obj: File = null, indent = ""):
 			if child != null:
 				child._dump(file_obj, indent + "  ")
 
-func draw(height: float = 1, clear_drawing: bool = true, drawer: ImmediateGeometry = null, material: Material = null) -> void:
+func draw(height: float = 1, clear_drawing: bool = true, draw_outlines: bool = true, draw_tree_bounds: bool = true, drawer: ImmediateGeometry = null, material: Material = null) -> void:
 	"""
 	Initializes drawing stuff for you, you can use `_draw` method if you want to have special initialization.
 	"""
@@ -293,7 +293,10 @@ func draw(height: float = 1, clear_drawing: bool = true, drawer: ImmediateGeomet
 	if material:
 		drawer.set_material_override(material)
 	drawer.begin(Mesh.PRIMITIVE_LINES)
-	_create_rect_lines(drawer, height)
+	if draw_tree_bounds:
+		_create_rect_lines(drawer, height)
+	if draw_outlines:
+		_draw(drawer, height)
 	drawer.end()
 	
 func _draw(drawer: ImmediateGeometry, height: float) -> void:
