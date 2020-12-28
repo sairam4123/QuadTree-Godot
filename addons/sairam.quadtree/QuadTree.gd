@@ -286,6 +286,7 @@ func _dump(file_obj: File = null, indent = ""):
 
 func draw(height: float = 1, clear_drawing: bool = true, draw_outlines: bool = true, draw_tree_bounds: bool = true, drawer: ImmediateGeometry = null, material: Material = null) -> void:
 	"""
+        :VersionChanged 1.0.1
 	Initializes drawing stuff for you, you can use `_draw` method if you want to have special initialization.
 	"""
 	drawer = drawer if drawer else self._immediate_geo_node
