@@ -230,6 +230,7 @@ func _create_rect_lines(drawer, height) -> void:
 	"""
 	:PrivateMeth
 	
+	:VersionChanged 1.0.1
 	Creates the lines that shows the subdivided quadtree.
 	"""
 	
