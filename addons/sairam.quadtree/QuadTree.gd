@@ -226,7 +226,7 @@ func _get_child(body_bounds: AABB) -> QuadTree:
 			return _children[3]  # bottom right
 	
 
-func _create_rect_lines(points) -> void:
+func _create_rect_lines(drawer, height) -> void:
 	"""
 	:PrivateMeth
 	
@@ -236,25 +236,25 @@ func _create_rect_lines(points) -> void:
 	# recursively call _create_rect_lines to create dividing lines.
 	for child in _children:
 		if child:
-			child._create_rect_lines(points)
+			child._create_rect_lines(drawer, height)
 	
 	# create the points
-	var p1 = Vector3(_bounds.position.x, _bounds.position.z, 1)
-	var p2 = Vector3(p1.x + _bounds.size.x, p1.y, 1)
-	var p3 = Vector3(p1.x + _bounds.size.x, p1.y + _bounds.size.z, 1)
-	var p4 = Vector3(p1.x, p1.y + _bounds.size.z, 1)
-	# append them into points array
-	points.append(p1)
-	points.append(p2)
+	var p1 = Vector3(_bounds.position.x, height, _bounds.position.z)
+	var p2 = Vector3(p1.x + _bounds.size.x, height, p1.z)
+	var p3 = Vector3(p1.x + _bounds.size.x, height, p1.z + _bounds.size.z)
+	var p4 = Vector3(p1.x, height, p1.z + _bounds.size.z)
 
-	points.append(p2)
-	points.append(p3)
+	drawer.add_vertex(p1)
+	drawer.add_vertex(p2)
 
-	points.append(p3)
-	points.append(p4)
+	drawer.add_vertex(p2)
+	drawer.add_vertex(p3)
 
-	points.append(p4)
-	points.append(p1)
+	drawer.add_vertex(p3)
+	drawer.add_vertex(p4)
+
+	drawer.add_vertex(p4)
+	drawer.add_vertex(p1)
 
 func dump(file_name = null, indent = ""):
 	if file_name:
@@ -293,7 +293,7 @@ func draw(height: float = 1, clear_drawing: bool = true, drawer: ImmediateGeomet
 	if material:
 		drawer.set_material_override(material)
 	drawer.begin(Mesh.PRIMITIVE_LINES)
-	_draw(drawer, height)
+	_create_rect_lines(drawer, height)
 	drawer.end()
 	
 func _draw(drawer: ImmediateGeometry, height: float) -> void:
@@ -307,13 +307,6 @@ func _draw(drawer: ImmediateGeometry, height: float) -> void:
 	for child in _children:
 		if not _is_leaf:
 			child._draw(drawer, height)
-	var points = []
-	# initialize the points
-	_create_rect_lines(points)
-	
-	# draw them into the node.
-	for point in points:
-		drawer.add_vertex(Vector3(point.x, height, point.y)) # change it to x and y axis if needed.
 	
 	# draw the bodies
 	for body in _objects:
