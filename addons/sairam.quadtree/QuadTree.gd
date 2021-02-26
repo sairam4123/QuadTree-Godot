@@ -37,7 +37,7 @@ func _set_as_empty_leaf():
 	self._children.resize(4)
 	_is_leaf = true
 
-func add_body(body: VisualInstance) -> bool:
+func add_body(body: VisualInstance, bounds: AABB = AABB()) -> bool:
 	"""
 	Adds a new body into the QuadTree.
 	"""
@@ -46,9 +46,9 @@ func add_body(body: VisualInstance) -> bool:
 	
 	if !_is_leaf:
 		# add to child if not current obj is leaf.
-		var child = _get_child(body.get_transformed_aabb())
+		var child = _get_child(body.get_transformed_aabb() if body.has_method("get_transformed_aabb") else bounds)
 		if child:
-			return child.add_body(body)
+			return child.add_body(body, bounds)
 	
 	# add the object into the tree
 	body.set_meta("_qt", self)
@@ -83,14 +83,14 @@ func remove_body(body: VisualInstance) -> bool:
 	return true
 		
 
-func update_body(body: VisualInstance) -> void:
+func update_body(body: VisualInstance, bounds: AABB = AABB()) -> void:
 	"""
 	Updates the body. A method for moving objects.
 	"""
 	assert(_parent == null)		# do not call this except on the root
 
 	if remove_body(body):
-		add_body(body)
+		add_body(body, bounds)
 
 func _subdivide() -> void:
 	"""
@@ -286,7 +286,7 @@ func _dump(file_obj: File = null, indent = ""):
 
 func draw(height: float = 1, clear_drawing: bool = true, draw_outlines: bool = true, draw_tree_bounds: bool = true, drawer: ImmediateGeometry = null, material: Material = null) -> void:
 	"""
-        :VersionChanged 1.0.1
+		:VersionChanged 1.0.1
 	Initializes drawing stuff for you, you can use `_draw` method if you want to have special initialization.
 	"""
 	drawer = drawer if drawer else self._immediate_geo_node
