@@ -37,7 +37,7 @@ func _set_as_empty_leaf():
 	self._children.resize(4)
 	_is_leaf = true
 
-func add_body(body: VisualInstance, bounds: AABB = AABB()) -> bool:
+func add_body(body: Spatial, bounds: AABB = AABB()) -> bool:
 	"""
 	Adds a new body into the QuadTree.
 	"""
@@ -59,7 +59,7 @@ func add_body(body: VisualInstance, bounds: AABB = AABB()) -> bool:
 
 	return true
 
-func remove_body(body: VisualInstance) -> bool:
+func remove_body(body: Spatial) -> bool:
 	"""
 	Removes the pre-existing body from the QuadTree
 	"""
@@ -83,7 +83,7 @@ func remove_body(body: VisualInstance) -> bool:
 	return true
 		
 
-func update_body(body: VisualInstance, bounds: AABB = AABB()) -> void:
+func update_body(body: Spatial, bounds: AABB = AABB()) -> void:
 	"""
 	Updates the body. A method for moving objects.
 	"""
@@ -237,6 +237,7 @@ func _create_rect_lines(drawer, height) -> void:
 	# recursively call _create_rect_lines to create dividing lines.
 	for child in _children:
 		if child:
+			yield(get_tree(), "idle_frame")
 			child._create_rect_lines(drawer, height)
 	
 	# create the points

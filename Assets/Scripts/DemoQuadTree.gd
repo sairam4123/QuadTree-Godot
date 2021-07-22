@@ -4,6 +4,7 @@ var new_mesh: MeshInstance
 var root_qt_node: QuadTree
 var random_seed_to_use = null
 
+var is_ready = false
 func _ready() -> void:
 
 	if random_seed_to_use == null:
@@ -18,7 +19,7 @@ func _ready() -> void:
 	root_qt_node = QuadTree.new(AABB(Vector3(-100, 0, -100), Vector3(200, 0, 200)), 3, 8, 0, null, spatial_mat, get_node("/root/Spatial/ImmediateGeometry"))
 	# create 100 objects to test out quad tree
 	var spatial_mat_2 = SpatialMaterial.new()
-	for i in range(25):
+	for i in range(10000):
 		# create new mesh instance
 		var new_mesh = MeshInstance.new()
 		# create a new cube mesh
@@ -33,7 +34,7 @@ func _ready() -> void:
 		add_child(new_mesh)
 		# add it into the quad tree
 		root_qt_node.add_body(new_mesh)
-	
+		yield(get_tree(), "idle_frame")
 	# test query -- create a new sphere mesh and set it's radius to 5
 	var sphere_mesh = SphereMesh.new()
 	sphere_mesh.radius = rand_range(5, 8)
@@ -55,9 +56,12 @@ func _ready() -> void:
 
 	# visualize the quad tree
 	root_qt_node.draw(0.2)
+	is_ready = true
 	
 
 func _process(delta: float) -> void:
+		if !is_ready:
+			return
 		var mouse_pointer = get_viewport().get_mouse_position()
 		var camera = get_viewport().get_camera()
 		var from = camera.project_ray_origin(mouse_pointer)
