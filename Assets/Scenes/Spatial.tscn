@@ -1,7 +1,8 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://Assets/Scenes/Camera.tscn" type="PackedScene" id=1]
 [ext_resource path="res://Assets/Scripts/DemoQuadTree.gd" type="Script" id=2]
+[ext_resource path="res://addons/sairam.quadtree/QuadTreeNode.gd" type="Script" id=3]
 
 [sub_resource type="GDScript" id=1]
 script/source = "extends Spatial
@@ -42,10 +43,18 @@ visible = false
 mesh = SubResource( 2 )
 material/0 = SubResource( 3 )
 
+[node name="QuadTreeNode" type="Spatial" parent="."]
+script = ExtResource( 3 )
+bounds = AABB( -100, 0, -100, 200, 0, 200 )
+capacity = 5
+max_levels = 8
+immediate_geo_node_path = NodePath("../ImmediateGeometry")
+
 [node name="MeshInstance" type="MeshInstance" parent="."]
 mesh = SubResource( 4 )
 material/0 = null
 script = ExtResource( 2 )
+root_qt_node_path = NodePath("../QuadTreeNode")
 
 [node name="StaticBody" type="StaticBody" parent="MeshInstance"]
 

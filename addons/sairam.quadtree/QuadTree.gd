@@ -1,31 +1,28 @@
-extends Spatial
-class_name QuadTree
-
+extends Resource
 
 var _bounds: AABB
 var _capacity: int
 var _max_level: int
 var _level: int
-var _parent: QuadTree = null
+var _parent = null
 var _children = []
 var _objects = []
 var _is_leaf: bool = true
 var _center: Vector3
-var _material: Material
 var _immediate_geo_node: ImmediateGeometry
 
-func _init(bounds, capacity, max_level, level = 0, parent = null, material = null, immediate_geo_node = null) -> void:
+func _init(bounds, capacity, max_level, level = 0, parent = null, immediate_geo_node = null) -> void:
 	self._bounds = bounds
 	self._capacity = capacity
 	self._max_level = max_level 
 	self._level = level
 	self._parent = parent
 	self._center = self._bounds.size / 2
-	self._material = material
 	self._immediate_geo_node = immediate_geo_node
-	if immediate_geo_node:
-		self._immediate_geo_node.set_material_override(material)
 	_set_as_empty_leaf()
+
+func set_drawing_node(immediate_geo: ImmediateGeometry):
+	self._immediate_geo_node = immediate_geo
 
 func _set_as_empty_leaf():
 	"""
@@ -52,6 +49,8 @@ func add_body(body: Spatial, bounds: AABB = AABB()) -> bool:
 	
 	# add the object into the tree
 	body.set_meta("_qt", self)
+	if body is Spatial:
+		body.set_meta("_bounds", bounds)
 	_objects.push_back(body)
 
 	if _is_leaf and _level < _max_level and _objects.size() >= _capacity:
@@ -77,6 +76,7 @@ func remove_body(body: Spatial) -> bool:
 	
 	# remove the `_qt` node because it's no longer in quad tree
 	_remove_qt_metadata(body)
+	MetaStaticFuncs.remove_meta_with_check(body, "_bounds")
 	_objects.erase(body)
 	_unsubdivide()
 
@@ -121,8 +121,11 @@ func _subdivide() -> void:
 		var existing_objects = _objects
 		_objects = []
 		for body in existing_objects:
-			_remove_qt_metadata(body)	
-			add_body(body)
+			_remove_qt_metadata(body)
+			if body is Spatial and body.get_meta("_bounds"):
+				add_body(body, body.get_meta("_bounds"))
+			else:
+				add_body(body)
 
 	
 
@@ -158,7 +161,11 @@ func _query(bound: AABB) -> Array:
 	"""
 	var found_objects = []
 	for object in _objects:
-		var transformed_aabb = object.get_transformed_aabb()
+		var transformed_aabb
+		if object is Spatial and object.has_meta("_bounds"):
+			transformed_aabb = object.get_meta("_bounds")
+		else:
+			transformed_aabb = object.get_transformed_aabb()
 		if bound.intersects(transformed_aabb):  # check if the object in the bounds and it's not bound
 			# add the object into found_objects
 			found_objects.push_back(object)
@@ -204,7 +211,7 @@ func _unsubdivide() -> void:
 	if _parent:
 		_parent._unsubdivide()  # unsubdivide the parent if needed.
 
-func _get_child(body_bounds: AABB) -> QuadTree:
+func _get_child(body_bounds: AABB):
 	"""
 	:PrivateMeth
 	
@@ -237,7 +244,6 @@ func _create_rect_lines(drawer, height) -> void:
 	# recursively call _create_rect_lines to create dividing lines.
 	for child in _children:
 		if child:
-			yield(get_tree(), "idle_frame")
 			child._create_rect_lines(drawer, height)
 	
 	# create the points
@@ -285,16 +291,14 @@ func _dump(file_obj: File = null, indent = ""):
 			if child != null:
 				child._dump(file_obj, indent + "  ")
 
-func draw(height: float = 1, clear_drawing: bool = true, draw_outlines: bool = true, draw_tree_bounds: bool = true, drawer: ImmediateGeometry = null, material: Material = null) -> void:
+func draw(height: float = 1, clear_drawing: bool = true, draw_outlines: bool = true, draw_tree_bounds: bool = true) -> void:
 	"""
 		:VersionChanged 1.0.1
 	Initializes drawing stuff for you, you can use `_draw` method if you want to have special initialization.
 	"""
-	drawer = drawer if drawer else self._immediate_geo_node
+	var drawer = self._immediate_geo_node
 	if clear_drawing:
 		drawer.clear()
-	if material:
-		drawer.set_material_override(material)
 	drawer.begin(Mesh.PRIMITIVE_LINES)
 	if draw_tree_bounds:
 		_create_rect_lines(drawer, height)
@@ -316,9 +320,12 @@ func _draw(drawer: ImmediateGeometry, height: float) -> void:
 	
 	# draw the bodies
 	for body in _objects:
+		var rect: Rect2
 		# convert aabb to rect for easier usage
-		var rect = _convert_aabb_to_rect(body.get_transformed_aabb())
-		
+		if body is Spatial and body.has_meta("_bounds"):
+			rect = _convert_aabb_to_rect(body.get_meta("_bounds"))
+		else:
+			rect = _convert_aabb_to_rect(body.get_transformed_aabb())
 		# get all 4 points
 		var Bpoint = Vector3(rect.end.x, height, rect.position.y)
 		var Dpoint = Vector3(rect.position.x, height,  rect.end.y)

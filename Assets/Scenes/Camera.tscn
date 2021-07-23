@@ -10,3 +10,4 @@ transform = Transform( 1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0
 
 [node name="Camera" type="Camera" parent="VerticalRotation"]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 10 )
+far = 8192.0

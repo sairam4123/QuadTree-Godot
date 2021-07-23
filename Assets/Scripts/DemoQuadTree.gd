@@ -1,7 +1,8 @@
 extends MeshInstance
 
 var new_mesh: MeshInstance
-var root_qt_node: QuadTree
+export(NodePath) var root_qt_node_path
+onready var root_qt_node = get_node(root_qt_node_path)
 var random_seed_to_use = null
 
 var is_ready = false
@@ -14,27 +15,26 @@ func _ready() -> void:
 	seed(random_seed_to_use)
 
 	# create quadtree
-	var spatial_mat = SpatialMaterial.new()
-	spatial_mat.albedo_color = Color(0, 0, 0, 1)
-	root_qt_node = QuadTree.new(AABB(Vector3(-100, 0, -100), Vector3(200, 0, 200)), 3, 8, 0, null, spatial_mat, get_node("/root/Spatial/ImmediateGeometry"))
 	# create 100 objects to test out quad tree
-	var spatial_mat_2 = SpatialMaterial.new()
-	for i in range(10000):
+	for i in range(10):
 		# create new mesh instance
 		var new_mesh = MeshInstance.new()
 		# create a new cube mesh
 		var cube_mesh = CubeMesh.new()
+		# create a new mat
+		var cube_mat = SpatialMaterial.new()
 		# set it's size random from 2, 4 
 		cube_mesh.size = Vector3(rand_range(2, 4), 0, rand_range(2, 4))
 		new_mesh.mesh = cube_mesh
-		spatial_mat_2.albedo_color = Color(rand_range(0, 1), rand_range(0, 1), rand_range(0, 1), 1)
-		new_mesh.material_override = spatial_mat_2.duplicate()
+		cube_mat.albedo_color = Color(rand_range(0, 1), rand_range(0, 1), rand_range(0, 1), 1)
+		new_mesh.material_override = cube_mat
 		# set the position random from -25 to 25 -- size of the terrain
 		new_mesh.set_translation(Vector3(rand_range(-100, 100), 0.1, rand_range(-100, 100)))
 		add_child(new_mesh)
 		# add it into the quad tree
 		root_qt_node.add_body(new_mesh)
-		yield(get_tree(), "idle_frame")
+		if i % 100 == 0:
+			yield(get_tree(), "idle_frame")
 	# test query -- create a new sphere mesh and set it's radius to 5
 	var sphere_mesh = SphereMesh.new()
 	sphere_mesh.radius = rand_range(5, 8)
@@ -55,7 +55,7 @@ func _ready() -> void:
 #	print(returned_objects.size())
 
 	# visualize the quad tree
-	root_qt_node.draw(0.2)
+	root_qt_node.draw(0.2, true, false)
 	is_ready = true
 	
 
@@ -80,7 +80,7 @@ func _process(delta: float) -> void:
 #					print(object.has_meta("_qt"))
 					root_qt_node.remove_body(object)
 					object.call_deferred("queue_free")
-				root_qt_node.draw(0.2, true)
+				root_qt_node.draw(0.2, true, false)
 
 func _input(event):
 	if event.is_action_pressed("ui_select"):		# space bar
