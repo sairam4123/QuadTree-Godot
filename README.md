@@ -16,10 +16,8 @@ Special Thanks to:
 And big thanks to jaynabonne, for helping me to fix the regression that happend.
 
 # How to use this?:
-## Initialization of QuadTree:
-```gdscript
-var quad_tree = QuadTree.new(bounds, capacity, max_level)
-```
+## Initialization
+Just add the node and customize.
 ## Adding objects into QuadTree, use MeshInstance:
 ```gdscript
 # get mesh
